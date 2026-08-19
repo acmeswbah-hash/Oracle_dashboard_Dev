@@ -22,7 +22,7 @@
  
 const QUERIES = {
  
-  // ── 1. Business Groups (country slicer) ─────────────────────────────────────
+  // -- 1. Business Groups (country slicer) -------------------------------------
  
   businessGroups: `
     SELECT DISTINCT
@@ -30,9 +30,9 @@ const QUERIES = {
       pbg.name                AS bg_name,
       pbg.CURRENCY_CODE       AS currency_code
     FROM
-      hr_operating_units   hou,
-      per_business_groups  pbg,
-      fnd_lookup_values_vl flv
+      apps.hr_operating_units   hou,
+      apps.per_business_groups  pbg,
+      apps.fnd_lookup_values_vl flv
     WHERE
           flv.lookup_type          = 'XXACG_AR_DASHBOARD'
       AND hou.business_group_id    = pbg.business_group_id
@@ -40,7 +40,7 @@ const QUERIES = {
       AND flv.tag                  = hou.organization_id
     ORDER BY pbg.name`,
  
-  // ── 2. Operating Units (company slicer, cascades from bgId) ─────────────────
+  // -- 2. Operating Units (company slicer, cascades from bgId) -----------------
  
   operatingUnits: `
  
@@ -48,14 +48,14 @@ const QUERIES = {
       hou.organization_id  AS org_id,
       hou.name             AS ou_name
     FROM
-      hr_operating_units   hou,
-      per_business_groups  pbg
+      apps.hr_operating_units   hou,
+      apps.per_business_groups  pbg
     WHERE
           hou.business_group_id = pbg.business_group_id
       AND hou.BUSINESS_GROUP_ID = :bgId
     ORDER BY hou.name`,
  
-  // ── 3. Customer Balance Summary ──────────────────────────────────────────────
+  // -- 3. Customer Balance Summary ----------------------------------------------
  
   customerBalance: `
  
@@ -66,11 +66,11 @@ const QUERIES = {
       SUM(NVL(aps.AMOUNT_DUE_REMAINING,0)*NVL(aps.EXCHANGE_RATE,1)) AS func_outstanding,
       COUNT(aps.payment_schedule_id)                       AS trx_count
     FROM
-      ar_payment_schedules_all  aps,
-      ra_customer_trx_all       rct,
-      hr_operating_units        hou,
-      hz_parties                hp,
-      hz_cust_accounts_all      hca
+      apps.ar_payment_schedules_all  aps,
+      apps.ra_customer_trx_all       rct,
+      apps.hr_operating_units        hou,
+      apps.hz_parties                hp,
+      apps.hz_cust_accounts_all      hca
     WHERE
           hou.business_group_id           = :bgId
       AND (:orgId = 0 OR aps.org_id      = :orgId)
@@ -84,7 +84,7 @@ const QUERIES = {
     GROUP BY hca.account_number, hp.party_name, hca.customer_class_code
     ORDER BY func_outstanding DESC`,
 
-  // ── 4. Project Balance Summary ───────────────────────────────────────────────
+  // -- 4. Project Balance Summary -----------------------------------------------
  
   projectBalance: `
  
@@ -92,17 +92,17 @@ const QUERIES = {
       pp.segment1                                          AS project_no,
       pp.name                                              AS project_name,
       pps.DESCRIPTION                                      AS project_status,
-	  hp.party_name                                        as customer_name,
+      hp.party_name                                        as customer_name,
       SUM(NVL(aps.AMOUNT_DUE_REMAINING,0)*NVL(aps.EXCHANGE_RATE,1)) AS func_outstanding,
       COUNT(DISTINCT hca.cust_account_id)                  AS customer_count
     FROM
-      ar_payment_schedules_all  aps,
-      ra_customer_trx_all       rct,
-      hr_operating_units        hou,
-      hz_cust_accounts_all      hca,
-      pa_projects_all           pp,
-      pa_project_statuses       pps,
-	  HZ_PARTIES                hp
+      apps.ar_payment_schedules_all  aps,
+      apps.ra_customer_trx_all       rct,
+      apps.hr_operating_units        hou,
+      apps.hz_cust_accounts_all      hca,
+      apps.pa_projects_all           pp,
+      apps.pa_project_statuses       pps,
+      apps.HZ_PARTIES                hp
     WHERE
           hou.business_group_id               = :bgId
       AND (:orgId = 0 OR aps.org_id          = :orgId)
@@ -115,16 +115,16 @@ const QUERIES = {
     AND hca.cust_account_id                 != 511621
       AND pps.status_type               (+)   = 'PROJECT'
       AND pps.project_status_code       (+)   = pp.project_status_code
-	  and hca.party_id                        = hp.party_id
+      and hca.party_id                        = hp.party_id
     GROUP BY pp.segment1, pp.name, pps.DESCRIPTION, hp.party_name
     ORDER BY func_outstanding DESC`,
  
-  // ── 5. Aging Buckets ─────────────────────────────────────────────────────────
+  // -- 5. Aging Buckets ---------------------------------------------------------
  
   agingBuckets: `
  
     SELECT
-	  hou.name                                             as company,
+      hou.name                                             as company,
       hca.account_number                                   AS account_number,
       hp.party_name                                        AS customer_name,
       CASE
@@ -138,11 +138,11 @@ const QUERIES = {
       END                                                  AS aging_bucket,
       SUM(NVL(aps.AMOUNT_DUE_REMAINING,0)*NVL(aps.EXCHANGE_RATE,1)) AS func_outstanding
     FROM
-      ar_payment_schedules_all  aps,
-      ra_customer_trx_all       rct,
-      hr_operating_units        hou,
-      hz_parties                hp,
-      hz_cust_accounts_all      hca
+      apps.ar_payment_schedules_all  aps,
+      apps.ra_customer_trx_all       rct,
+      apps.hr_operating_units        hou,
+      apps.hz_parties                hp,
+      apps.hz_cust_accounts_all      hca
     WHERE
         hou.business_group_id           = :bgId
       AND (:orgId = 0 OR aps.org_id      = :orgId)
@@ -175,7 +175,7 @@ const QUERIES = {
         ELSE 7
       END`,
  
-  // ── 6. Transaction Drill-Down ────────────────────────────────────────────────
+  // -- 6. Transaction Drill-Down ------------------------------------------------
  
   customerDetail: `
  
@@ -204,10 +204,10 @@ const QUERIES = {
         ELSE '365+ days'
       END                                                  AS aging_bucket
     FROM
-      ar_payment_schedules_all  aps,
-      ra_customer_trx_all       rct,
-      hr_operating_units        hou,
-      hz_cust_accounts_all      hca
+      apps.ar_payment_schedules_all  aps,
+      apps.ra_customer_trx_all       rct,
+      apps.hr_operating_units        hou,
+      apps.hz_cust_accounts_all      hca
     WHERE
           hou.business_group_id           = :bgId
       AND (:orgId = 0 OR aps.org_id      = :orgId)
@@ -220,7 +220,7 @@ const QUERIES = {
       AND aps.customer_trx_id             = rct.customer_trx_id
     ORDER BY aps.DUE_DATE ASC`,
  
-  // ── 7. Customer Profile Info ─────────────────────────────────────────────────
+  // -- 7. Customer Profile Info -------------------------------------------------
  
   // Shown when user clicks customer name — address, tax, credit, status, etc.
  
@@ -247,10 +247,10 @@ const QUERIES = {
       zxr.rep_name,
       al.meaning                                           AS cust_class
     FROM
-      HZ_PARTIES               HP,
-      hz_cust_accounts_all     pv,
-      HZ_CUSTOMER_PROFILES     HCP,
-      ar_lookups               al,
+      apps.HZ_PARTIES               HP,
+      apps.hz_cust_accounts_all     pv,
+      apps.HZ_CUSTOMER_PROFILES     HCP,
+      apps.ar_lookups               al,
       (SELECT
          ZP.PARTY_ID,
          SUBSTR(ZR.REGISTRATION_NUMBER, 1,
@@ -260,8 +260,8 @@ const QUERIES = {
          zr.effective_to,
          zr.rep_party_tax_name                            AS rep_name
        FROM
-         ZX_PARTY_TAX_PROFILE ZP,
-         ZX_REGISTRATIONS     ZR
+         apps.ZX_PARTY_TAX_PROFILE ZP,
+         apps.ZX_REGISTRATIONS     ZR
        WHERE
              zp.party_type_code       = 'THIRD_PARTY'
          AND ZP.PARTY_TAX_PROFILE_ID  = ZR.PARTY_TAX_PROFILE_ID
@@ -278,9 +278,9 @@ const QUERIES = {
       AND al.lookup_code          (+) = pv.customer_class_code
     ORDER BY 2`,
  
-  // ── 8. Customer Email Addresses ──────────────────────────────────────────────
+  // -- 8. Customer Email Addresses ----------------------------------------------
  
-  // Joins hz_cust_accounts_all → hz_parties to get party_id, then fetches
+  // Joins hz_cust_accounts_all ? hz_parties to get party_id, then fetches
  
   // all active EMAIL contact points from hz_contact_points.
  
@@ -289,9 +289,9 @@ const QUERIES = {
     SELECT
       hcp.EMAIL_ADDRESS     AS email
     FROM
-      hz_contact_points     hcp,
-      hz_parties            hp,
-      hz_cust_accounts_all  pv
+      apps.hz_contact_points     hcp,
+      apps.hz_parties            hp,
+      apps.hz_cust_accounts_all  pv
     WHERE
           pv.account_number       = :custNo
       AND hp.party_id             = pv.party_id
@@ -301,7 +301,7 @@ const QUERIES = {
       AND hcp.status              = 'A'
     ORDER BY hcp.EMAIL_ADDRESS`,
  
-  // ── 9. Credit Limit ──────────────────────────────────────────────────────────
+  // -- 9. Credit Limit ----------------------------------------------------------
  
   // Returns the overall credit limit for a given customer account number.
  
@@ -311,12 +311,12 @@ const QUERIES = {
  
     SELECT MAX(a.overall_credit_limit) AS credit_limit
    FROM
-      HZ_CUST_PROFILE_AMTS   a,
-      HZ_CUST_ACCOUNTS_ALL   b,
-      ar_customers            c,
-      hz_cust_site_uses_all   d,
-      hz_cust_acct_sites_all  f,
-      hz_party_sites          g
+      apps.HZ_CUST_PROFILE_AMTS   a,
+      apps.HZ_CUST_ACCOUNTS_ALL   b,
+      apps.ar_customers            c,
+      apps.hz_cust_site_uses_all   d,
+      apps.hz_cust_acct_sites_all  f,
+      apps.hz_party_sites          g
     WHERE
           a.overall_credit_limit  IS NOT NULL
       AND a.cust_account_id       = b.cust_account_id
@@ -326,7 +326,7 @@ const QUERIES = {
       AND g.party_site_id         = f.party_site_id
       AND c.customer_number       = :custNo`,
 
-  // ── 10. Project Info ─────────────────────────────────────────────────────────
+  // -- 10. Project Info ---------------------------------------------------------
  
   // Main project details — bound by :projectNo (segment1)
  
@@ -343,9 +343,9 @@ const QUERIES = {
        pps.DESCRIPTION                                      AS project_status,
        hou.name                                             AS operating_unit
      FROM
-       pa_projects_all     pp,
-       hr_operating_units  hou,
-       pa_project_statuses pps
+       apps.pa_projects_all     pp,
+       apps.hr_operating_units  hou,
+       apps.pa_project_statuses pps
      WHERE
            pp.org_id              = hou.organization_id
        AND pp.TEMPLATE_FLAG       = 'N'
@@ -353,7 +353,7 @@ const QUERIES = {
        AND pps.status_type    (+) = 'PROJECT'
        AND pps.project_status_code (+) = pp.project_status_code`,
  
-  // ── 11. Project Linked (Secondary) Projects ───────────────────────────────
+  // -- 11. Project Linked (Secondary) Projects -------------------------------
  
   // Secondary projects linked via tasks — bound by :projectId
  
@@ -363,17 +363,17 @@ const QUERIES = {
        ppa.segment1                                         AS linked_project_no,
        ppa.name                                             AS linked_project_name
      FROM
-       pa_tasks            pt,
-       pa_projects_all     pp,
-       PA_PROJECT_CUSTOMERS ppc,
-       PA_PROJECTS_ALL     ppa
+       apps.pa_tasks            pt,
+       apps.pa_projects_all     pp,
+       apps.PA_PROJECT_CUSTOMERS ppc,
+       apps.PA_PROJECTS_ALL     ppa
      WHERE
            pt.task_id             = ppc.RECEIVER_TASK_ID
        AND pp.project_id          = pt.project_id
        AND ppc.PROJECT_ID         = ppa.PROJECT_ID
        AND pp.project_id          = :projectId`,
  
-  // ── 12. Project Value ────────────────────────────────────────────────────
+  // -- 12. Project Value ----------------------------------------------------
  
   // Total allocated funding — bound by :projectId
  
@@ -382,12 +382,12 @@ const QUERIES = {
     SELECT
        NVL(SUM(NVL(ALLOCATED_AMOUNT,0)),0) AS project_value
      FROM
-       PA_PROJECT_FUNDINGS_V
+       apps.PA_PROJECT_FUNDINGS
      WHERE
        PROJECT_ID = :projectId`,
 
-  // ── 13. User Access (from Oracle EBS lookup) ─────────────────────────────
-  // Managed in ERP: Application Developer → Lookups → XXACG_AR_DASHBOARD
+  // -- 13. User Access (from Oracle EBS lookup) -----------------------------
+  // Managed in ERP: Application Developer ? Lookups ? XXACG_AR_DASHBOARD
   // Description = username/email, Tag = org_id
 
   userAccess: `
@@ -395,7 +395,7 @@ const QUERIES = {
       description AS username,
       tag         AS org_id
     FROM
-      fnd_lookup_values_vl flv
+      apps.fnd_lookup_values_vl flv
     WHERE
       lookup_type = 'XXACG_AR_DASHBOARD'`,
 
@@ -403,7 +403,7 @@ const QUERIES = {
     SELECT
       tag AS org_id
     FROM
-      fnd_lookup_values_vl flv
+      apps.fnd_lookup_values_vl flv
     WHERE
           lookup_type = 'XXACG_AR_DASHBOARD'
       AND UPPER(description) = UPPER(:username)`,
