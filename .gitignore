@@ -1,0 +1,9 @@
+node_modules/
+.env
+ar-ui/node_modules/
+ar-ui/.env
+ar-ui/dist/
+dist/
+build/
+*.log
+data/User_Details.xlsx

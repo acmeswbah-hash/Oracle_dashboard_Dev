@@ -1,0 +1,21 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f1117; color: #e8eaf2; }
+select option { background: #1e2336; color: #e8eaf2; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4f8ef7;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
