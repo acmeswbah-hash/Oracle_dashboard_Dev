@@ -6,6 +6,7 @@
 
 */
  
+const fs       = require('fs');
 const oracledb = require('oracledb');
  
 const REQUIRED = ['DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_SERVICE'];
@@ -20,30 +21,20 @@ if (missing.length) {
 
 }
  
-if (!process.env.ORACLE_CLIENT_LIB) {
+const clientLib = process.env.ORACLE_CLIENT_LIB;
+const hasClient = !!(clientLib && fs.existsSync(clientLib));
 
-  console.error('[db] FATAL — ORACLE_CLIENT_LIB not set in .env');
-
-  process.exit(1);
-
-}
-
-try {
-
-  oracledb.initOracleClient({ libDir: process.env.ORACLE_CLIENT_LIB });
-
-  console.log('[db] Thick mode —', process.env.ORACLE_CLIENT_LIB);
-
-} catch (e) {
-
-  if (!e.message.includes('already initialized')) {
-
-    console.error('[db] Instant Client error:', e.message);
-
-    process.exit(1);
-
+if (hasClient) {
+  try {
+    oracledb.initOracleClient({ libDir: clientLib });
+    console.log('[db] Thick mode —', clientLib);
+  } catch (e) {
+    if (!e.message.includes('already initialized')) {
+      console.warn('[db] Instant Client unavailable, using Thin mode:', e.message);
+    }
   }
-
+} else {
+  console.log('[db] Thin mode — Oracle Instant Client not found (unset ORACLE_CLIENT_LIB on Azure)');
 }
  
 oracledb.outFormat     = oracledb.OUT_FORMAT_OBJECT;
