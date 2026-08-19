@@ -14,11 +14,7 @@ const REQUIRED = ['DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_SERVICE'];
 const missing  = REQUIRED.filter(k => !process.env[k]);
 
 if (missing.length) {
-
-  console.error('[db] FATAL — missing .env variables:', missing.join(', '));
-
-  process.exit(1);
-
+  console.error('[db] missing environment variables:', missing.join(', '), '— API data calls will fail until App Settings are set.');
 }
  
 const clientLib = process.env.ORACLE_CLIENT_LIB;

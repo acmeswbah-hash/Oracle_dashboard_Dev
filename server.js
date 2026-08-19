@@ -115,7 +115,7 @@ function localIPv4s() {
     .map((i) => i.address);
 }
 
-app.listen(PORT, HOST, () => {
+function onListen() {
   console.log('\n=========================================');
   console.log(`  Oracle AR API  →  listening on ${HOST}:${PORT}`);
   console.log('=========================================');
@@ -139,6 +139,13 @@ app.listen(PORT, HOST, () => {
   console.log(`  AUTH : JWT ${process.env.JWT_SECRET ? '(custom secret)' : '(default secret)'}}`);
   console.log(`  UI   : ${HAS_DIST ? DIST_DIR : 'NOT BUILT — run `npm run build` in ar-ui'}`);
   console.log('=========================================\n');
-});
+}
+
+// Azure Windows uses a named pipe for PORT — do not bind 0.0.0.0 there.
+if (process.env.WEBSITE_SITE_NAME) {
+  app.listen(PORT, onListen);
+} else {
+  app.listen(PORT, HOST, onListen);
+}
 
 module.exports = app;

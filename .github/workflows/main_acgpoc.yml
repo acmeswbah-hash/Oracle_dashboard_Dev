@@ -47,7 +47,7 @@ jobs:
     needs: build
     environment:
       name: Production
-      url: https://acgpoc.azurewebsites.net
+      url: https://acgpoc-e3ejg5bacwh5fef5.uaenorth-01.azurewebsites.net
 
     steps:
       - name: Download artifact from build job
