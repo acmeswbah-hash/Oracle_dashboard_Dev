@@ -65,8 +65,8 @@ jobs:
             "ALLOWED_ORIGIN=*"
           )
           $utf8 = New-Object System.Text.UTF8Encoding $false
-          [IO.File]::WriteAllLines((Join-Path (Get-Location) '.env'), $lines, $utf8)
-          Write-Host 'Wrote Azure .env (DB settings present; PORT left unset for App Service)'
+          [IO.File]::WriteAllLines((Join-Path (Get-Location) 'azure.env'), $lines, $utf8)
+          Write-Host 'Wrote azure.env for App Service (DB settings present; PORT left unset)'
 
       - name: Write login users file from GitHub secret
         env:
@@ -88,6 +88,7 @@ jobs:
           include-hidden-files: false
           path: |
             .
+            azure.env
             !ar-ui/node_modules/**
             !ar-ui/src/**
             !.git/**

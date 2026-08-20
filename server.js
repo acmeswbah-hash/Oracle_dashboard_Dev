@@ -1,5 +1,6 @@
 'use strict';
 
+require('dotenv').config({ path: require('path').join(__dirname, 'azure.env') });
 require('dotenv').config();
 
 const path      = require('path');

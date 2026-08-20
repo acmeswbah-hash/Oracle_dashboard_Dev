@@ -7,3 +7,5 @@ dist/
 build/
 *.log
 data/User_Details.xlsx
+azure.env
+data/User_Details.xlsx
