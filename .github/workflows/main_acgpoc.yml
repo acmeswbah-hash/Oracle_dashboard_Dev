@@ -29,6 +29,19 @@ jobs:
       - name: Build React UI into ar-ui/dist
         run: npm run build
 
+      - name: Write login users file from GitHub secret
+        env:
+          USER_DETAILS_XLSX_B64: ${{ secrets.USER_DETAILS_XLSX_B64 }}
+        shell: pwsh
+        run: |
+          if (-not $env:USER_DETAILS_XLSX_B64) {
+            throw "Missing GitHub secret USER_DETAILS_XLSX_B64"
+          }
+          New-Item -ItemType Directory -Force -Path data | Out-Null
+          $out = Join-Path "data" "User_Details.xlsx"
+          [IO.File]::WriteAllBytes($out, [Convert]::FromBase64String($env:USER_DETAILS_XLSX_B64.Trim()))
+          Write-Host "Wrote $out ($((Get-Item $out).Length) bytes)"
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
