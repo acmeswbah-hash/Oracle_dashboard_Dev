@@ -29,6 +29,45 @@ jobs:
       - name: Build React UI into ar-ui/dist
         run: npm run build
 
+      - name: Write Azure .env from GitHub secrets
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_SERVICE: ${{ secrets.DB_SERVICE }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+        shell: pwsh
+        run: |
+          if (-not $env:DB_USER -or -not $env:DB_PASSWORD -or -not $env:DB_HOST -or -not $env:DB_SERVICE) {
+            throw "Missing DB GitHub secrets (DB_USER, DB_PASSWORD, DB_HOST, DB_SERVICE)"
+          }
+          $lines = @(
+            "DB_USER=$($env:DB_USER)"
+            "DB_PASSWORD='$($env:DB_PASSWORD)'"
+            "DB_HOST=$($env:DB_HOST)"
+            "DB_PORT=$($env:DB_PORT)"
+            "DB_SERVICE=$($env:DB_SERVICE)"
+            "JWT_SECRET=$($env:JWT_SECRET)"
+            "GEMINI_API_KEY='$($env:GEMINI_API_KEY)'"
+            "SMTP_HOST=$($env:SMTP_HOST)"
+            "SMTP_PORT=$($env:SMTP_PORT)"
+            "SMTP_USER=$($env:SMTP_USER)"
+            "SMTP_PASS='$($env:SMTP_PASS)'"
+            "SMTP_FROM=$($env:SMTP_FROM)"
+            "PUBLIC_URL=https://acgpoc-e3ejg5bacwh5fef5.uaenorth-01.azurewebsites.net"
+            "ALLOWED_ORIGIN=*"
+          )
+          $utf8 = New-Object System.Text.UTF8Encoding $false
+          [IO.File]::WriteAllLines((Join-Path (Get-Location) '.env'), $lines, $utf8)
+          Write-Host 'Wrote Azure .env (DB settings present; PORT left unset for App Service)'
+
       - name: Write login users file from GitHub secret
         env:
           USER_DETAILS_XLSX_B64: ${{ secrets.USER_DETAILS_XLSX_B64 }}
